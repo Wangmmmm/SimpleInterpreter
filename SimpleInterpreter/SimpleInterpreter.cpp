@@ -2,10 +2,138 @@
 //
 
 #include <iostream>
+#include <string>
+#include <memory>
+#include <vector>
+using namespace std;
+
+namespace MW
+{
+
+    struct CompileError{};
+
+
+ 
+    static string _INTERGER = "INTERGER";
+    static string _PLUS = "PLUS";
+    static string _EOF = "EOF";
+
+    class NullType{};
+    static NullType NullValue{};
+
+    class TokenBase
+    {
+    public: string Type;
+          TokenBase(string InType) :Type(InType)
+          {}
+
+          virtual void foo() {};
+    };
+
+    template<typename T>
+    class Token: public TokenBase
+    {
+    public:
+        T Value;// T =  string, int, NullValue...
+    public:
+        Token(string InType, T InValue) :TokenBase(InType), Value(InValue)
+        {}
+    };
+
+    class Interpreter
+    {
+
+        using IntToken = Token<int>;
+        using StringToken = Token<string>;
+
+    private:
+        string Text;
+        int Pos;
+        //TODO:智能指针
+        TokenBase* CurrentToken;
+    public:
+        Interpreter(string InText) :Text(InText), Pos(0), CurrentToken(nullptr)
+        {}
+
+        void Error()
+        {
+            throw CompileError{};
+        }
+
+        TokenBase* GetNextToken()
+        {
+            //;
+         
+            TokenBase* mToken = nullptr;
+            if (this->Pos > (int)this->Text.size() - 1)
+            {
+                return new Token<NullType>(_EOF, NullValue);
+            }
+            
+            char CurrentChar = Text[this->Pos];
+
+          
+
+            if (isdigit(CurrentChar))
+            {
+                mToken = new IntToken(_INTERGER, CurrentChar - 48);
+            }else if (CurrentChar == '+')
+            {
+               mToken = new StringToken(_PLUS, "+");
+            }
+            else {
+                this->Error();
+            }
+            this->Pos++;
+            return mToken;
+        }
+
+        void Eat(string TokenType)
+        {
+            if (this->CurrentToken->Type == TokenType)
+            {
+                this->CurrentToken = this->GetNextToken();
+            }
+            else {
+                this->Error();
+            }
+        }
+
+        int Expr()
+        {
+            this->CurrentToken = this->GetNextToken();
+            IntToken* Left = dynamic_cast<IntToken*>(this->CurrentToken);
+            this->Eat(_INTERGER);
+
+            StringToken* Op = dynamic_cast<StringToken*>(this->CurrentToken);
+            this->Eat(_PLUS);
+
+            IntToken* Right = dynamic_cast<IntToken*>(this->CurrentToken);
+            this->Eat(_INTERGER);
+
+            int Result = Left->Value + Right->Value;
+            return Result;
+        }
+       
+    };
+}
+
+
 
 int main()
 {
     std::cout << "Hello World!\n";
+    while (1)
+    {
+        string Text;
+        std::cin >> Text;
+        MW::Interpreter interpreter(Text);
+
+        std::cout << interpreter.Expr() << endl;
+
+    }
+
+  
 }
 
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单
