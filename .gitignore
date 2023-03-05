@@ -37,3 +37,5 @@
 *.vcxproj.user
 *.sln
 *.vs
+/.vs
+/Debug
