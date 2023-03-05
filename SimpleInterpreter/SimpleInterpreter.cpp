@@ -7,24 +7,29 @@
 #include <vector>
 using namespace std;
 
+
+
 namespace MW
 {
+    enum class TokenType
+    {
+        _INTERGER,
+        _PLUS,
+        _MINUS,
+        _EOF
+    };
+
 
     struct CompileError{};
 
-
- 
-    static string _INTERGER = "INTERGER";
-    static string _PLUS = "PLUS";
-    static string _EOF = "EOF";
 
     class NullType{};
     static NullType NullValue{};
 
     class TokenBase
     {
-    public: string Type;
-          TokenBase(string InType) :Type(InType)
+    public: TokenType Type;
+          TokenBase(TokenType InType) :Type(InType)
           {}
 
           virtual void foo() {};
@@ -36,7 +41,7 @@ namespace MW
     public:
         T Value;// T =  string, int, NullValue...
     public:
-        Token(string InType, T InValue) :TokenBase(InType), Value(InValue)
+        Token(TokenType InType, T InValue) :TokenBase(InType), Value(InValue)
         {}
     };
 
@@ -51,6 +56,8 @@ namespace MW
         int Pos;
         //TODO:智能指针
         TokenBase* CurrentToken;
+
+       // char CurrentChar;
     public:
         Interpreter(string InText) :Text(InText), Pos(0), CurrentToken(nullptr)
         {}
@@ -67,7 +74,7 @@ namespace MW
             TokenBase* mToken = nullptr;
             if (this->Pos > (int)this->Text.size() - 1)
             {
-                return new Token<NullType>(_EOF, NullValue);
+                return new Token<NullType>(TokenType::_EOF, NullValue);
             }
             
             char CurrentChar = Text[this->Pos];
@@ -76,10 +83,10 @@ namespace MW
 
             if (isdigit(CurrentChar))
             {
-                mToken = new IntToken(_INTERGER, CurrentChar - 48);
+                mToken = new IntToken(TokenType::_INTERGER, CurrentChar - 48);
             }else if (CurrentChar == '+')
             {
-               mToken = new StringToken(_PLUS, "+");
+               mToken = new StringToken(TokenType::_PLUS, "+");
             }
             else {
                 this->Error();
@@ -88,7 +95,7 @@ namespace MW
             return mToken;
         }
 
-        void Eat(string TokenType)
+        void Eat(TokenType TokenType)
         {
             if (this->CurrentToken->Type == TokenType)
             {
@@ -103,13 +110,13 @@ namespace MW
         {
             this->CurrentToken = this->GetNextToken();
             IntToken* Left = dynamic_cast<IntToken*>(this->CurrentToken);
-            this->Eat(_INTERGER);
+            this->Eat(TokenType::_INTERGER);
 
             StringToken* Op = dynamic_cast<StringToken*>(this->CurrentToken);
-            this->Eat(_PLUS);
+            this->Eat(TokenType::_PLUS);
 
             IntToken* Right = dynamic_cast<IntToken*>(this->CurrentToken);
-            this->Eat(_INTERGER);
+            this->Eat(TokenType::_INTERGER);
 
             int Result = Left->Value + Right->Value;
             return Result;
